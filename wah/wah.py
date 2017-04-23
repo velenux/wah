@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+import re
 from flask import *
 from flask_sqlalchemy import SQLAlchemy
 
@@ -13,8 +14,17 @@ class Card(db.Model):
     """Holds a card's data."""
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(512), unique=True)
+    kind = db.Column(db.Integer)
 
     def __init__(self, text):
+        """Create the Card object."""
+        # substitute any number of underscores with 4
+        text = re.sub('__+', '____', text)
+
+        if "____" in text:
+            self.kind = 1
+        else:
+            self.kind = 0
         self.text = text
 
     def __repr__(self):
@@ -73,6 +83,12 @@ def add_card():
         except Exception as e:
             flash('Error adding the card!')
             error = str(e)
-            return render_template('login.html', error=error)
+            return render_template('show_cards.html', error=error)
     # if method is not POST
-    return render_template('login.html')
+    return render_template('show_cards.html')
+
+
+@app.route('/card/list')
+def show_cards():
+    """List all cards."""
+    return render_template('show_cards.html', all_cards=Card.query.all())

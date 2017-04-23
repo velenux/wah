@@ -8,5 +8,12 @@
     </form>
   {% endif %}
 
-  <p>The database currently has {{ card_number }} cards.</p>
+  <p>The database currently holds these cards:</p>
+
+{% for card in all_cards %}
+  <li><p>{{ card.text|safe }}</p></li>
+{% else %}
+  <p></p>
+{% endfor %}
+
 {% endblock %}

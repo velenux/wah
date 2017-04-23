@@ -9,6 +9,9 @@
   {% else %}
     <a href="{{ url_for('logout') }}">log out</a>
   {% endif %}
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
   </div>
   {% for message in get_flashed_messages() %}
     <div class=flash>{{ message }}</div>
