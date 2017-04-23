@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
+  {% if session.logged_in %}
+    <form action="{{ url_for('add_card') }}" method=post class=add-entry>
+      <input type="text" size="30" name="card-text">
+      <label for"card-text">Insert new card text</label>
+      <input type="submit" value="Add card" />
+    </form>
+  {% endif %}
+
+  <p>The database currently has {{ card_number }} cards.</p>
+{% endblock %}
