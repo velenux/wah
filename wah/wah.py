@@ -79,7 +79,7 @@ def add_card():
             db.session.add(c)
             db.session.commit()
             flash('Card added!')
-            return redirect(url_for('show_main_index'))
+            return redirect(url_for('show_cards'))
         except Exception as e:
             flash('Error adding the card!')
             error = str(e)
