@@ -4,10 +4,22 @@ import re
 from flask import *
 from flask_sqlalchemy import SQLAlchemy
 
+import logging
+from logging.handlers import RotatingFileHandler
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wah.sqlite'
 db = SQLAlchemy(app)
 app.secret_key = 'FIXME: Change Me'
+app.debug = True
+
+# logging
+handler = RotatingFileHandler('wah.log', maxBytes=10000000, backupCount=1)
+handler.setLevel(logging.DEBUG)
+app.logger.addHandler(handler)
+
+
+# ~~ database ~~
 
 # Deck / Card associations
 deck_card_associations = db.Table('deck_card_associations',
@@ -49,9 +61,36 @@ class Deck(db.Model):
     def __repr__(self):
         return '"%r"' % self.name
 
+class User(db.Model):
+    """Model for a user."""
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(128), unique=True)
+    email = db.Column(db.String(512), unique=True)
+    password = db.Column(db.String(64))
+
+    def __init__(self, username, email, password):
+        """Create the User object."""
+        self.username = username
+        self.email = email
+        self.password = self.__crypt(password.encode('utf-8'))
+
+    def __repr__(self):
+        return '"%r"' % self.username
+
+    def valid_pass(self, password):
+        return self.__crypt(password.encode('utf-8')) == self.password
+
+    def __crypt(self, text):
+        from hashlib import sha256
+        hash = sha256()
+        hash.update(text)
+        return hash.hexdigest()
+
+
 try:
     cards = Card.query.first()
     decks = Deck.query.first()
+    users = User.query.first()
     print('Database ready.')
 except Exception as e:
     db.create_all()
@@ -69,15 +108,24 @@ def login():
     """Logs the user in the website."""
     if request.method == 'POST':
         error = None
-        # FIXME: stub
-        if request.form['username'] == 'donald.trump':
+        user = request.form['username']
+        pasw = request.form['password']
+        try:
+            #u = User.query.filter_by((User.username == user | User.email == user)).first()
+            u = User.query.filter_by(username=user).first()
+            if u.valid_pass(pasw):
+                app.logger.info('valid password')
+                session['logged_in'] = True
+                flash('You were logged in')
+                return redirect(url_for('show_main_index'))
+            else:
+                app.logger.error('invalid password')
+                error = 'Invalid account'
+        except Exception as e:
+            app.logger.info('exception while logging', e)
             error = 'Invalid account'
-        else:
-            session['logged_in'] = True
-            flash('You were logged in')
-            return redirect(url_for('show_main_index'))
     # if method is not POST
-    return render_template('login.html')
+    return render_template('login.html', error=error)
 
 
 @app.route('/logout')
@@ -136,3 +184,28 @@ def add_deck():
 def show_decks():
     """List all decks."""
     return render_template('show_decks.html', all_decks=Deck.query.all())
+
+
+@app.route('/user/add', methods=['GET', 'POST'])
+def add_user():
+    """Tries to add a new user to the database."""
+    if request.method == 'POST':
+        error = None
+        try:
+            u = User(request.form['username'], request.form['email'], request.form['password'])
+            db.session.add(u)
+            db.session.commit()
+            flash('user added!')
+            return redirect(url_for('show_users'))
+        except Exception as e:
+            flash('Error adding the user!')
+            error = str(e)
+            return render_template('show_users.html', error=error)
+    # if method is not POST
+    return render_template('show_users.html')
+
+
+@app.route('/user/show')
+def show_users():
+    """Shows how many users we have (stub)."""
+    return render_template('show_users.html', user_number=db.session.query(User).count())

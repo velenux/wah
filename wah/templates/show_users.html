@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+    <form action="{{ url_for('add_user') }}" method=post class=add-entry>
+      <input type="text" size="30" name="username">
+      <label for"username">Username</label><br />
+      <input type="text" size="30" name="email">
+      <label for"email">E-Mail</label><br />
+      <input type="password" size="30" name="password">
+      <label for"password">Password</label><br />
+      <input type="submit" value="Add user" />
+    </form>
+  {% endif %}
+
+  <p>The database currently holds {{user_number}} users.</p>
+
+{% endblock %}
