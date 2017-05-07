@@ -11,7 +11,7 @@
   <p>The database currently holds these cards:</p>
 
 {% for card in all_cards %}
-  <li><p>{{ card.text|safe }}</p></li>
+  <li><p><span style="align: right">{{ card.id}}</span><span style="align:left; margin-left: 1em">{{ card.text|safe }}</span></p></li>
 {% else %}
   <p></p>
 {% endfor %}

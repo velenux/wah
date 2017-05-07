@@ -9,9 +9,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wah.sqlite'
 db = SQLAlchemy(app)
 app.secret_key = 'FIXME: Change Me'
 
+# Deck / Card associations
+deck_card_associations = db.Table('deck_card_associations',
+    db.Column('card_id', db.Integer, db.ForeignKey('card.id')),
+    db.Column('deck_id', db.Integer, db.ForeignKey('deck.id'))
+)
 
 class Card(db.Model):
-    """Holds a card's data."""
+    """Model for a card."""
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(512), unique=True)
     kind = db.Column(db.Integer)
@@ -30,9 +35,23 @@ class Card(db.Model):
     def __repr__(self):
         return '"%r"' % self.text
 
+class Deck(db.Model):
+    """Model for a collection of Cards."""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(512), unique=True)
+    cards = db.relationship('Card', secondary=deck_card_associations,
+        backref=db.backref('decks', lazy='dynamic'))
+
+    def __init__(self, name):
+        """Create the Deck object."""
+        self.name = name
+
+    def __repr__(self):
+        return '"%r"' % self.name
 
 try:
     cards = Card.query.first()
+    decks = Deck.query.first()
     print('Database ready.')
 except Exception as e:
     db.create_all()
@@ -92,3 +111,28 @@ def add_card():
 def show_cards():
     """List all cards."""
     return render_template('show_cards.html', all_cards=Card.query.all())
+
+
+@app.route('/deck/add', methods=['GET', 'POST'])
+def add_deck():
+    """Tries to add a new deck to the database."""
+    if request.method == 'POST':
+        error = None
+        try:
+            d = Deck(request.form['deck-name'])
+            db.session.add(d)
+            db.session.commit()
+            flash('deck added!')
+            return redirect(url_for('show_decks'))
+        except Exception as e:
+            flash('Error adding the deck!')
+            error = str(e)
+            return render_template('show_decks.html', error=error)
+    # if method is not POST
+    return render_template('show_decks.html')
+
+
+@app.route('/deck/list')
+def show_decks():
+    """List all decks."""
+    return render_template('show_decks.html', all_decks=Deck.query.all())
