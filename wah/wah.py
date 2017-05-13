@@ -2,6 +2,8 @@
 
 import re
 
+import json
+
 from flask import *
 from flask_sqlalchemy import SQLAlchemy
 
@@ -87,11 +89,39 @@ class User(db.Model):
         hash.update(text)
         return hash.hexdigest()
 
+class Match(db.Model):
+    """Model for a match."""
+    # FIXME: this is horrible and really needs transactions to be safe to use
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.Text(), unique=True)
 
+    def __init__(self, status):
+        """Create the Match object."""
+        self._status = status
+        self.status = json.dumps(self._status)
+
+    def __repr__(self):
+        return '"Game ID: %r"' % self.id
+
+    def valid_pass(self, password):
+        return self.__crypt(password.encode('utf-8')) == self._status['password']
+
+    def save_status(self):
+        self.status = json.dumps(self._status)
+
+    def __crypt(self, text):
+        from hashlib import sha256
+        hash = sha256()
+        hash.update(text)
+        return hash.hexdigest()
+
+
+# ~~ main ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 try:
     cards = Card.query.first()
     decks = Deck.query.first()
     users = User.query.first()
+    matches = Match.query.first()
     print('Database ready.')
 except Exception as e:
     db.create_all()
