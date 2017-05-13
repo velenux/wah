@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 import re
+
 from flask import *
 from flask_sqlalchemy import SQLAlchemy
 
@@ -105,9 +106,9 @@ def show_main_index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None
     """Logs the user in the website."""
     if request.method == 'POST':
-        error = None
         user = request.form['username']
         pasw = request.form['password']
         try:
@@ -188,9 +189,10 @@ def show_decks():
 
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
+    # FIXME: this is a security risk, anyone can add users
+    error = None
     """Tries to add a new user to the database."""
     if request.method == 'POST':
-        error = None
         try:
             u = User(request.form['username'], request.form['email'], request.form['password'])
             db.session.add(u)
@@ -202,7 +204,7 @@ def add_user():
             error = str(e)
             return render_template('show_users.html', error=error)
     # if method is not POST
-    return render_template('show_users.html')
+    return render_template('show_users.html', error=error, user_number=db.session.query(User).count())
 
 
 @app.route('/user/show')
