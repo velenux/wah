@@ -117,6 +117,8 @@ class Match(db.Model):
 
 
 # ~~ main ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# FIXME: quick 'n' dirty hack to create all the required tables on first run
 try:
     cards = Card.query.first()
     decks = Deck.query.first()
@@ -136,8 +138,8 @@ def show_main_index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    error = None
     """Logs the user in the website."""
+    error = None
     if request.method == 'POST':
         user = request.form['username']
         pasw = request.form['password']
@@ -194,7 +196,7 @@ def show_cards():
 
 @app.route('/deck/add', methods=['GET', 'POST'])
 def add_deck():
-    """Tries to add a new deck to the database."""
+    """Adds a new deck to the database."""
     if request.method == 'POST':
         error = None
         try:
@@ -213,15 +215,15 @@ def add_deck():
 
 @app.route('/deck/list')
 def show_decks():
-    """List all decks."""
+    """Lists all decks."""
     return render_template('show_decks.html', all_decks=Deck.query.all())
 
 
+# FIXME: this is a security risk, anyone can add users
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
-    # FIXME: this is a security risk, anyone can add users
-    error = None
     """Tries to add a new user to the database."""
+    error = None
     if request.method == 'POST':
         try:
             u = User(request.form['username'], request.form['email'], request.form['password'])
