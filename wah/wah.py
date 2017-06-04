@@ -89,6 +89,7 @@ class User(db.Model):
         hash.update(text)
         return hash.hexdigest()
 
+
 class Game(db.Model):
     """Model for a game."""
     # FIXME: this is horrible and really needs transactions to be safe to use
@@ -133,7 +134,9 @@ except Exception as e:
 @app.route('/')
 def show_main_index():
     """Shows the main index for the website."""
-    return render_template('main_index.html', card_number = db.session.query(Card).count())
+    return render_template('main_index.html',
+        card_number = db.session.query(Card).count(),
+        user = User.query.get(session['uid']))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -144,12 +147,14 @@ def login():
         user = request.form['username']
         pasw = request.form['password']
         try:
+            # FIXME: should be able to use username OR email to log in
             #u = User.query.filter_by((User.username == user | User.email == user)).first()
             u = User.query.filter_by(username=user).first()
             if u.valid_pass(pasw):
                 app.logger.info('valid password')
                 session['logged_in'] = True
-                flash('You were logged in')
+                session['uid'] = u.id
+                flash('Logged in successfully')
                 return redirect(url_for('show_main_index'))
             else:
                 app.logger.error('invalid password')
