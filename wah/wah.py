@@ -89,14 +89,14 @@ class User(db.Model):
         hash.update(text)
         return hash.hexdigest()
 
-class Match(db.Model):
-    """Model for a match."""
+class Game(db.Model):
+    """Model for a game."""
     # FIXME: this is horrible and really needs transactions to be safe to use
     id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.Text(), unique=True)
 
     def __init__(self, status):
-        """Create the Match object."""
+        """Create the Game object."""
         self._status = status
         self.status = json.dumps(self._status)
 
@@ -123,7 +123,7 @@ try:
     cards = Card.query.first()
     decks = Deck.query.first()
     users = User.query.first()
-    matches = Match.query.first()
+    games = Game.query.first()
     print('Database ready.')
 except Exception as e:
     db.create_all()
