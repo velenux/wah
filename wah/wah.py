@@ -138,13 +138,13 @@ try:
     user = User.query.first()
     game = Game.query.first()
     owned_games = user.owned_games.all()
-    print("owned games: ", owned_games)
     print('Database ready.')
 except Exception as e:
     db.create_all()
     print('Initialized the database.')
 
 
+# /    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/')
 def show_main_index():
     """Shows the main index for the website."""
@@ -153,6 +153,7 @@ def show_main_index():
         user = User.query.get(session['uid']))
 
 
+# /login    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Logs the user in the website."""
@@ -180,6 +181,7 @@ def login():
     return render_template('login.html', error=error)
 
 
+# /logout    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/logout')
 def logout():
     """Logs the user out of the website."""
@@ -188,6 +190,7 @@ def logout():
     return redirect(url_for('show_main_index'))
 
 
+# /card/add    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/card/add', methods=['GET', 'POST'])
 def add_card():
     """Tries to add a new card to the database."""
@@ -207,12 +210,14 @@ def add_card():
     return render_template('show_cards.html')
 
 
+# /card/list    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/card/list')
 def show_cards():
     """List all cards."""
     return render_template('show_cards.html', all_cards=Card.query.all())
 
 
+# /deck/add    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/deck/add', methods=['GET', 'POST'])
 def add_deck():
     """Adds a new deck to the database."""
@@ -232,16 +237,18 @@ def add_deck():
     return render_template('show_decks.html')
 
 
+# /deck/list    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/deck/list')
 def show_decks():
     """Lists all decks."""
     return render_template('show_decks.html', all_decks=Deck.query.all())
 
 
-# FIXME: this is a security risk, anyone can add users
+# /user/add    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
     """Tries to add a new user to the database."""
+    # FIXME: this is a security risk, anyone can add users
     error = None
     if request.method == 'POST':
         try:
@@ -258,12 +265,14 @@ def add_user():
     return render_template('show_users.html', error=error, user_number=db.session.query(User).count())
 
 
+# /user/show    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/user/show')
 def show_users():
     """Shows how many users we have (stub)."""
     return render_template('show_users.html', user_number=db.session.query(User).count())
 
 
+# /game/add    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/game/add', methods=['GET', 'POST'])
 def add_game():
     """Tries to add a new game to the database."""
@@ -291,6 +300,7 @@ def add_game():
     return render_template('show_games.html', error=error, games = u.owned_games)
 
 
+# /game/X/play    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/game/<int:game_id>/play')
 def play_game(game_id):
     """Shows the page to play the game with id game_id."""
@@ -298,6 +308,7 @@ def play_game(game_id):
     return 'Game %d' % game_id
 
 
+# /game/list    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/game/list')
 def show_games():
     """Shows all games belonging to a user."""
