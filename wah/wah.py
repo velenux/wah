@@ -54,6 +54,7 @@ class Deck(db.Model):
     """Model for a collection of Cards."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(512), unique=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     cards = db.relationship('Card', secondary=deck_card_associations,
         backref=db.backref('decks', lazy='dynamic'))
 
@@ -64,6 +65,14 @@ class Deck(db.Model):
     def __repr__(self):
         return '"%r"' % self.name
 
+    def add_card(self, card):
+        try:
+            self.cards.add(card)
+        except Exception as e:
+            app.logger.error("error adding card %s to deck %s, %s", card.name, self.name, e)
+            raise e
+
+
 class User(db.Model):
     """Model for a user."""
     id = db.Column(db.Integer, primary_key=True)
@@ -71,6 +80,9 @@ class User(db.Model):
     email = db.Column(db.String(512), unique=True)
     password = db.Column(db.String(64))
     owned_games = db.relationship('Game',
+        backref=db.backref('owner'),
+        lazy='dynamic')
+    owned_decks = db.relationship('Deck',
         backref=db.backref('owner'),
         lazy='dynamic')
 
