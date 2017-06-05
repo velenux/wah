@@ -275,7 +275,7 @@ def show_users():
 # /game/add    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/game/add', methods=['GET', 'POST'])
 def add_game():
-    """Tries to add a new game to the database."""
+    """Add a new game entry to the database."""
     error = None
     try:
         u = User.query.get(session['uid'])
@@ -284,6 +284,7 @@ def add_game():
     except Exception as e:
         flash('Error retrieving user data')
         error = str(e)
+        return render_template('show_games.html', error=error, games = [])
     if request.method == 'POST':
         try:
             g = Game({}, u)
@@ -295,9 +296,9 @@ def add_game():
             flash('Error creating the game!')
             app.logger.error("error while creating a game: %s", e)
             error = str(e)
-            return render_template('show_games.html', error=error, games = u.owned_games)
+            return render_template('show_games.html', error=error, games = u.owned_games.all())
     # if method is not POST
-    return render_template('show_games.html', error=error, games = u.owned_games)
+    return render_template('show_games.html', error=error, games = u.owned_games.all())
 
 
 # /game/X/play    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

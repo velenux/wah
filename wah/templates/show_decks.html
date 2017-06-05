@@ -11,7 +11,7 @@
   <p>The database currently holds these decks:</p>
 
 {% for deck in all_decks %}
-  <li><p><span style="align: right">{{ deck.id}}</span><span style="align:left; margin-left: 1em">{{ deck.name|safe }}</span></p></li>
+  <li><p><span style="align: right">{{ deck.id }}</span><span style="align:left; margin-left: 1em">{{ deck.name|safe }}</span></p></li>
 {% else %}
   <p></p>
 {% endfor %}
