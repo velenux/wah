@@ -10,10 +10,12 @@
 
   <p>The database currently holds these cards:</p>
 
+{% if all_cards|length > 0 %}
+<ul>
 {% for card in all_cards %}
   <li><p><span style="align: right">{{ card.id }}</span><span style="align:left; margin-left: 1em">{{ card.text|safe }}</span></p></li>
-{% else %}
-  <p></p>
 {% endfor %}
+<ul>
+{% endif %}
 
 {% endblock %}
