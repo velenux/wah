@@ -10,6 +10,13 @@ from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging.handlers import RotatingFileHandler
 
+
+# CHANGE HERE
+ADMIN_USER = 'admin'
+ADMIN_PASS = 'admin'
+ADMIN_MAIL = 'admin@example.org'
+
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wah.sqlite'
 db = SQLAlchemy(app)
@@ -152,7 +159,12 @@ try:
     owned_games = user.owned_games.all()
     print('Database ready.')
 except Exception as e:
+    # create all tables
     db.create_all()
+    # create a default admin user
+    admin = User(ADMIN_USER, ADMIN_MAIL, ADMIN_PASS)
+    db.session.add(admin)
+    db.session.commit()
     print('Initialized the database.')
 
 
@@ -205,7 +217,7 @@ def logout():
 # /card/add    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/card/add', methods=['GET', 'POST'])
 def add_card():
-    """Tries to add a new card to the database."""
+    """Add a new card to the database."""
     if request.method == 'POST':
         error = None
         try:
