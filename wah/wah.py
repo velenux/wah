@@ -70,6 +70,9 @@ class User(db.Model):
     username = db.Column(db.String(128), unique=True)
     email = db.Column(db.String(512), unique=True)
     password = db.Column(db.String(64))
+    owned_games = db.relationship('Game',
+        backref=db.backref('owner'),
+        lazy='dynamic')
 
     def __init__(self, username, email, password):
         """Create the User object."""
@@ -94,12 +97,21 @@ class Game(db.Model):
     """Model for a game."""
     # FIXME: this is horrible and really needs transactions to be safe to use
     id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.Text(), unique=True)
+    status = db.Column(db.PickleType())
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, status):
+    def __init__(self, status, owner):
         """Create the Game object."""
-        self._status = status
-        self.status = json.dumps(self._status)
+        try:
+            app.logger.debug("Game.__init__")
+            app.logger.debug("status: %s", status)
+            app.logger.debug("owner ID: %s", owner.id)
+            self._status = status
+            self.status = self._status
+            self.owner_id = owner.id
+        except Exception as e:
+            app.logger.error("error while initializing a game, %s", e)
+            raise e
 
     def __repr__(self):
         return '"Game ID: %r"' % self.id
@@ -108,7 +120,7 @@ class Game(db.Model):
         return self.__crypt(password.encode('utf-8')) == self._status['password']
 
     def save_status(self):
-        self.status = json.dumps(self._status)
+        self.status = self._status
 
     def __crypt(self, text):
         from hashlib import sha256
@@ -121,10 +133,12 @@ class Game(db.Model):
 
 # FIXME: quick 'n' dirty hack to create all the required tables on first run
 try:
-    cards = Card.query.first()
-    decks = Deck.query.first()
-    users = User.query.first()
-    games = Game.query.first()
+    card = Card.query.first()
+    deck = Deck.query.first()
+    user = User.query.first()
+    game = Game.query.first()
+    owned_games = user.owned_games.all()
+    print("owned games: ", owned_games)
     print('Database ready.')
 except Exception as e:
     db.create_all()
@@ -248,3 +262,59 @@ def add_user():
 def show_users():
     """Shows how many users we have (stub)."""
     return render_template('show_users.html', user_number=db.session.query(User).count())
+
+
+@app.route('/game/add', methods=['GET', 'POST'])
+def add_game():
+    """Tries to add a new game to the database."""
+    error = None
+    try:
+        u = User.query.get(session['uid'])
+        if u is None:
+            error = 'Invalid session'
+    except Exception as e:
+        flash('Error retrieving user data')
+        error = str(e)
+    if request.method == 'POST':
+        try:
+            g = Game({}, u)
+            db.session.add(g)
+            db.session.commit()
+            flash('game created!')
+            return redirect(url_for('play_game', game_id = g.id))
+        except Exception as e:
+            flash('Error creating the game!')
+            app.logger.error("error while creating a game: %s", e)
+            error = str(e)
+            return render_template('show_games.html', error=error, games = u.owned_games)
+    # if method is not POST
+    return render_template('show_games.html', error=error, games = u.owned_games)
+
+
+@app.route('/game/<int:game_id>/play')
+def play_game(game_id):
+    """Shows the page to play the game with id game_id."""
+    error = None
+    return 'Game %d' % game_id
+
+
+@app.route('/game/list')
+def show_games():
+    """Shows all games belonging to a user."""
+    error = None
+    try:
+        u = User.query.get(session['uid'])
+        if u is None:
+            error = 'Invalid session'
+    except Exception as e:
+        flash('Error retrieving user data')
+        error = str(e)
+        return render_template('show_games.html', error=error, games = [])
+    try:
+        games = u.owned_games.all()
+    except Exception as e:
+        flash('Error retrieving games for the user!')
+        error = str(e)
+        return render_template('show_games.html', error=error, games = [])
+    # if method is not POST
+    return render_template('show_games.html', error=error, games = u.owned_games)

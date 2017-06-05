@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block body %}
+
+{% if session.logged_in %}
+  <form action="{{ url_for('add_game') }}" method="post" class="add-entry">
+    <input type="name" size="30" name="game-name">
+    <label for"game-name">Create a new game</label>
+    <input type="submit" value="Add game" />
+  </form>
+{% endif %}
+
+<ul>
+{% for game in games %}
+  <li><p><span style="align: right">{{ game.id }}</span><span style="align:left; margin-left: 1em">{{ game.owner|safe }}</span></p></li>
+{% else %}
+  <p></p>
+{% endfor %}
+</ul>
+
+{% endblock %}
