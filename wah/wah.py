@@ -268,6 +268,38 @@ def show_decks():
     return render_template('show_decks.html', all_decks=Deck.query.all())
 
 
+# /deck/X/add/Y    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@app.route('/deck/<int:deck_id>/add/<int:card_id>')
+def add_card_to_deck(deck_id, card_id):
+    """Adds a Card to a Deck."""
+    error = None
+    try:
+        card = Card.query.get(card_id)
+        deck = Deck.query.get(deck_id)
+        if card is not None:
+            deck.cards.append(card)
+            db.session.commit()
+            flash('Added card ' + card.text)
+    except Exception as e:
+        app.logger.error("Error adding card id %d to deck id %d: %s", card_id, deck_id, e)
+        error = "Error adding card id %d to deck id %d: %s" % (card_id, deck_id, e)
+    return redirect(url_for('show_deck', deck_id = deck_id))
+
+
+# /deck/X/    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@app.route('/deck/<int:deck_id>/')
+@app.route('/deck/<int:deck_id>/show')
+def show_deck(deck_id):
+    """Shows the contents of a specific Deck."""
+    error = None
+    try:
+        deck = Deck.query.get(deck_id)
+    except Exception as e:
+        app.logger.error("Error retrieving deck_id %d: %s", deck_id, e)
+        error = "Error retrieving deck_id %d: %s" % (deck_id, e)
+    return render_template('show_deck.html', error = error, deck = deck)
+
+
 # /user/add    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():

@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+  <p>Deck {{ deck.name|safe }} contains these cards:</p>
+
+
+{% if deck.cards|length > 0 %}
+<ul>
+{% for card in deck.cards %}
+  <li><p><span style="align: right">{{ card.id }}</span><span style="align:left; margin-left: 1em">{{ card.text|safe }}</span></p></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% endblock %}
